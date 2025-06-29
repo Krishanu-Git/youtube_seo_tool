@@ -3,7 +3,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import streamlit as st
 from api.youtube_api import get_single_video_metadata, get_video_comments
-from core.tag_generator import generate_seo_tags_from_text, translate_tags
+from core.tag_generator import generate_seo_tags_from_text
 from utils.helpers import extract_video_id, analyze_comment_sentiment
 import openai
 
@@ -54,12 +54,6 @@ if st.button("Analyze Video"):
                 if metadata.get("tags"):
                     st.subheader("📌 Existing Tags (from YouTube)")
                     st.code(", ".join(metadata['tags']), language="text")
-                
-                # Tag Translation
-                st.subheader("🌐 Tag Translations")
-                translated = translate_tags(metadata['tags'])
-                for lang, tags in translated.items():
-                    st.write(f"{lang.upper()}: {', '.join(tags)}")
 
                 # AI Title Suggestion
                 st.subheader("🔮 AI-Generated SEO Title")
