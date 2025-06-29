@@ -6,4 +6,4 @@ seaborn
 nltk
 google-api-python-client
 openai
-googletrans==4.0.0-rc1
+googletrans==3.1.0a0
