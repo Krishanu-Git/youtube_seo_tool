@@ -1,5 +1,3 @@
-# Dockerfile
-
 # Base image
 FROM python:3.10-slim
 
@@ -11,6 +9,9 @@ COPY . .
 
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Install NLTK data packages
+RUN python -m nltk.downloader punkt vader_lexicon
 
 # Expose the Streamlit default port
 EXPOSE 8501

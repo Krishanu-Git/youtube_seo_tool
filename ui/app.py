@@ -2,71 +2,25 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import streamlit as st
-from api.youtube_api import get_single_video_metadata
-from core.tag_generator import generate_seo_tags_from_text
-from utils.helpers import extract_video_id
+from api.youtube_api import get_single_video_metadata, get_video_comments
+from core.tag_generator import generate_seo_tags_from_text, translate_tags
+from utils.helpers import extract_video_id, analyze_comment_sentiment
+import openai
 
-def detailed_seo_score(metadata, suggested_tags, search_term):
-    title = metadata['title'].lower()
-    desc = metadata['description'].lower()
-    tags = [t.lower() for t in metadata.get('tags', [])]
-    keywords = search_term.lower().split()
+OPENAI_API_KEY = st.secrets.get("OPENAI_API_KEY", None)
 
-    score = 0
-    report = []
+openai.api_key = OPENAI_API_KEY
 
-    # Title Length
-    if 50 <= len(title) <= 70:
-        score += 10
-    else:
-        report.append("✏️ Title should be 50–70 characters. (+0/10)")
-
-    # Description Length
-    if len(desc) >= 150:
-        score += 15
-    else:
-        report.append("📝 Description should be at least 150 characters. (+0/15)")
-
-    # Keyword in Title
-    if any(k in title for k in keywords):
-        score += 15
-    else:
-        report.append("🔑 Use keywords in your title. (+0/15)")
-
-    # Keyword in Tags
-    if any(k in ' '.join(tags) for k in keywords):
-        score += 10
-    else:
-        report.append("🏷️ Include keywords in your tags. (+0/10)")
-
-    # Tag Count
-    if len(tags) >= 10:
-        score += 10
-    else:
-        report.append("🔖 Add at least 10 tags. (+0/10)")
-
-    # Matching Suggested Tags
-    match_count = len(set(suggested_tags).intersection(tags))
-    if match_count >= 3:
-        score += 10
-    else:
-        report.append("🧩 Use more suggested tags from SEO engine. (+0/10)")
-
-    # Keyword in Description
-    if any(k in desc for k in keywords):
-        score += 10
-    else:
-        report.append("🗣️ Mention keywords in your description. (+0/10)")
-
-    # Tag Uniqueness (avoid overused tags like “funny”)
-    generic_tags = {"funny", "cool", "nice", "fun", "new", "youtube", "video"}
-    unique_tags = [t for t in tags if t not in generic_tags]
-    if len(unique_tags) >= len(tags) * 0.7:
-        score += 10
-    else:
-        report.append("📌 Use more specific/unique tags. (+0/10)")
-
-    return score, report
+def generate_ai_title(original_title):
+    prompt = f"Rewrite the following YouTube title to be more clickworthy and SEO-friendly: '{original_title}'. Keep it under 70 characters."
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return response["choices"][0]["message"]["content"].strip()
+    except Exception as e:
+        return f"AI Error: {str(e)}"
 
 st.title("🎯 YouTube Video SEO Tag Analyzer")
 video_url = st.text_input("Enter a YouTube video URL")
@@ -101,12 +55,22 @@ if st.button("Analyze Video"):
                     st.subheader("📌 Existing Tags (from YouTube)")
                     st.code(", ".join(metadata['tags']), language="text")
                 
-                # st.subheader("📊 Advanced SEO Performance Score")
-                # seo_score, issues = detailed_seo_score(metadata, tags, video_url)
-                # st.write(f"🔎 Final SEO Score: **{seo_score} / 100**")
-                # if issues:
-                #     st.warning("💡 Suggestions to Improve SEO:")
-                #     for msg in issues:
-                #         st.markdown(f"- {msg}")
-                # else:
-                #     st.success("✅ Excellent SEO optimization! 🔥")
+                # Tag Translation
+                st.subheader("🌐 Tag Translations")
+                translated = translate_tags(metadata['tags'])
+                for lang, tags in translated.items():
+                    st.write(f"{lang.upper()}: {', '.join(tags)}")
+
+                # AI Title Suggestion
+                st.subheader("🔮 AI-Generated SEO Title")
+                ai_title = generate_ai_title(metadata["title"])
+                st.success(ai_title)
+
+                # Sentiment Analysis
+                st.subheader("🗣️ Comment Sentiment")
+                comments = get_video_comments(video_id)
+                if comments:
+                    sentiment = analyze_comment_sentiment(comments)
+                    st.write(f"Average Sentiment Score: `{sentiment:.2f}` (−1: Negative, +1: Positive)")
+                else:
+                    st.warning("No comments found or error fetching comments.")

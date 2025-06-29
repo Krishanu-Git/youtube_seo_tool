@@ -1,5 +1,6 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
+from googletrans import Translator
 import re
 
 def clean_text(texts):
@@ -19,3 +20,10 @@ def generate_seo_tags_from_text(texts, num_tags=10):
         keywords.append(terms[idx])
 
     return keywords
+
+def translate_tags(tags, target_langs=["hi", "bn"]):
+    translator = Translator()
+    translations = {}
+    for lang in target_langs:
+        translations[lang] = [translator.translate(tag, dest=lang).text for tag in tags]
+    return translations
