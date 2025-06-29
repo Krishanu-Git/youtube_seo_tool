@@ -1,7 +1,7 @@
 import requests
 from googleapiclient.discovery import build
 import html
-from streamlit import st
+import streamlit as st
 
 YOUTUBE_SEARCH_URL = "https://www.googleapis.com/youtube/v3/search"
 YOUTUBE_VIDEO_URL = "https://www.googleapis.com/youtube/v3/videos"
