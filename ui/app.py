@@ -69,7 +69,6 @@ def detailed_seo_score(metadata, suggested_tags, search_term):
     return score, report
 
 st.title("🎯 YouTube Video SEO Tag Analyzer")
-
 video_url = st.text_input("Enter a YouTube video URL")
 
 if st.button("Analyze Video"):
@@ -83,6 +82,10 @@ if st.button("Analyze Video"):
                 st.error("❌ Could not retrieve video data.")
             else:
                 st.success("✅ Video Loaded!")
+                thumbnail_url = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
+                st.image(thumbnail_url, caption="Video Thumbnail", use_container_width=True)
+                st.subheader("Channel Title:")
+                st.write(metadata['channelTitle'])
                 st.subheader("Video Title:")
                 st.write(metadata['title'])
                 st.subheader("Video Description:")
@@ -98,12 +101,12 @@ if st.button("Analyze Video"):
                     st.subheader("📌 Existing Tags (from YouTube)")
                     st.code(", ".join(metadata['tags']), language="text")
                 
-                st.subheader("📊 Advanced SEO Performance Score")
-                seo_score, issues = detailed_seo_score(metadata, tags, video_url)
-                st.write(f"🔎 Final SEO Score: **{seo_score} / 100**")
-                if issues:
-                    st.warning("💡 Suggestions to Improve SEO:")
-                    for msg in issues:
-                        st.markdown(f"- {msg}")
-                else:
-                    st.success("✅ Excellent SEO optimization! 🔥")
+                # st.subheader("📊 Advanced SEO Performance Score")
+                # seo_score, issues = detailed_seo_score(metadata, tags, video_url)
+                # st.write(f"🔎 Final SEO Score: **{seo_score} / 100**")
+                # if issues:
+                #     st.warning("💡 Suggestions to Improve SEO:")
+                #     for msg in issues:
+                #         st.markdown(f"- {msg}")
+                # else:
+                #     st.success("✅ Excellent SEO optimization! 🔥")
